@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,6 +46,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -51,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zubair.jarvis.chat.ChatMessage
 import com.zubair.jarvis.chat.ChatStorage
+import com.zubair.jarvis.chat.ChatRouteResolver
 import com.zubair.jarvis.chat.OpenAiCompatibleProvider
 import com.zubair.jarvis.chat.ProviderConfig
 import com.zubair.jarvis.engine.LocalModelEngine
@@ -65,7 +70,7 @@ private val Panel = Color(0xFF121D30)
 private val Ice = Color(0xFF83D9F7)
 private val Muted = Color(0xFF91A1B8)
 private val UserBubble = Color(0xFF18364B)
-private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.2.0-test/Jarvis-Android.apk"
+private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.2.1-test/Jarvis-Android.apk"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -172,20 +177,27 @@ private fun JarvisChatApp(storage: ChatStorage) {
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().background(Midnight).padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    Box(Modifier.fillMaxSize().background(Midnight)) {
+        AnimatedJarvisBackground(Modifier.fillMaxSize().alpha(0.22f))
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            Column {
-                Text("JARVIS", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-                Text("ANDROID INTELLIGENCE", color = Muted, fontSize = 9.sp, letterSpacing = 1.5.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("JARVIS", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 4.sp)
+                    Text("ANDROID INTELLIGENCE", color = Muted, fontSize = 10.sp, letterSpacing = 2.sp)
+                }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { uriHandler.openUri(DIRECT_APK_URL) }) { Text("APK", color = Ice, fontSize = 10.sp) }
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { uriHandler.openUri(DIRECT_APK_URL) }) { Text("APK", color = Ice, fontSize = 11.sp) }
                 TextButton(enabled = !busy, onClick = {
                     scope.launch {
                         busy = true
@@ -217,16 +229,15 @@ private fun JarvisChatApp(storage: ChatStorage) {
                             downloadProgress = null
                         }
                     }
-                }) { Text("GET MODEL", color = Ice, fontSize = 10.sp) }
-                TextButton(enabled = !busy, onClick = { modelPicker.launch(arrayOf("*/*")) }) { Text("IMPORT", color = Ice, fontSize = 10.sp) }
+                }) { Text("GET MODEL", color = Ice, fontSize = 11.sp) }
+                TextButton(enabled = !busy, onClick = { modelPicker.launch(arrayOf("*/*")) }) { Text("IMPORT", color = Ice, fontSize = 11.sp) }
                 TextButton(enabled = !busy, onClick = {
                     messages.clear()
                     error = null
                     scope.launch(Dispatchers.IO) { storage.saveMessages(emptyList()) }
-                }) { Text("CLEAR", color = Muted, fontSize = 10.sp) }
-                TextButton(onClick = { showSettings = true }) { Text("SETTINGS", color = Ice, fontSize = 10.sp) }
+                }) { Text("CLEAR", color = Muted, fontSize = 11.sp) }
+                TextButton(onClick = { showSettings = true }) { Text("SETTINGS", color = Ice, fontSize = 11.sp) }
             }
-        }
 
         Text(
             if (downloadProgress != null) "DOWNLOADING MODEL: " + downloadProgress + "%" else localStatus,
@@ -236,7 +247,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
         )
         Surface(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            color = Panel,
+            color = Panel.copy(alpha = 0.86f),
             shape = RoundedCornerShape(18.dp)
         ) {
             if (messages.isEmpty()) {
@@ -297,42 +308,53 @@ private fun JarvisChatApp(storage: ChatStorage) {
                         error = null
                         messages.add(ChatMessage("user", text))
                         busy = true
-                        if (localEngine.isLoaded()) {
-                            messages.add(ChatMessage("assistant", ""))
-                            val assistantIndex = messages.lastIndex
-                            localEngine.send(text, null) { result ->
-                                when (result) {
-                                    LocalModelEngine.Generation.Started -> Unit
-                                    is LocalModelEngine.Generation.Token -> {
-                                        val previous = messages[assistantIndex]
-                                        messages[assistantIndex] = previous.copy(content = previous.content + result.value)
+                        when (ChatRouteResolver.resolve(localEngine.isLoaded(), config, apiKey)) {
+                            ChatRouteResolver.Route.LOCAL -> {
+                                messages.add(ChatMessage("assistant", ""))
+                                val assistantIndex = messages.lastIndex
+                                localEngine.send(text, null) { result ->
+                                    when (result) {
+                                        LocalModelEngine.Generation.Started -> Unit
+                                        is LocalModelEngine.Generation.Token -> {
+                                            val previous = messages[assistantIndex]
+                                            messages[assistantIndex] = previous.copy(content = previous.content + result.value)
+                                        }
+                                        is LocalModelEngine.Generation.Completed -> {
+                                            messages[assistantIndex] = messages[assistantIndex].copy(content = result.text)
+                                            busy = false
+                                            scope.launch(Dispatchers.IO) { storage.saveMessages(messages.toList()) }
+                                        }
+                                        is LocalModelEngine.Generation.Failed -> {
+                                            error = result.message
+                                            busy = false
+                                        }
+                                        LocalModelEngine.Generation.Cancelled -> busy = false
                                     }
-                                    is LocalModelEngine.Generation.Completed -> {
-                                        messages[assistantIndex] = messages[assistantIndex].copy(content = result.text)
-                                        busy = false
-                                        scope.launch(Dispatchers.IO) { storage.saveMessages(messages.toList()) }
-                                    }
-                                    is LocalModelEngine.Generation.Failed -> {
-                                        error = result.message
-                                        busy = false
-                                    }
-                                    LocalModelEngine.Generation.Cancelled -> busy = false
                                 }
                             }
-                        } else {
-                            scope.launch {
-                                try {
-                                    val requestHistory = messages.toList()
-                                    withContext(Dispatchers.IO) { storage.saveMessages(requestHistory) }
-                                    val answer = provider.complete(config, apiKey, requestHistory)
-                                    messages.add(ChatMessage("assistant", answer))
-                                    val completedHistory = messages.toList()
-                                    withContext(Dispatchers.IO) { storage.saveMessages(completedHistory) }
-                                } catch (failure: Exception) {
-                                    error = failure.message ?: "The request failed. Check provider settings and connectivity."
-                                } finally {
-                                    busy = false
+                            ChatRouteResolver.Route.CLOUD -> {
+                                scope.launch {
+                                    try {
+                                        val requestHistory = messages.toList()
+                                        withContext(Dispatchers.IO) { storage.saveMessages(requestHistory) }
+                                        val answer = provider.complete(config, apiKey, requestHistory)
+                                        messages.add(ChatMessage("assistant", answer))
+                                        val completedHistory = messages.toList()
+                                        withContext(Dispatchers.IO) { storage.saveMessages(completedHistory) }
+                                    } catch (failure: Exception) {
+                                        error = failure.message ?: "The request failed. Check provider settings and connectivity."
+                                    } finally {
+                                        busy = false
+                                    }
                                 }
+                            }
+                            ChatRouteResolver.Route.SETUP_REQUIRED -> {
+                                messages.add(ChatMessage(
+                                    "assistant",
+                                    "Jarvis is ready. Load a local model with GET MODEL for private offline chat, or open SETTINGS to connect your own HTTPS provider."
+                                ))
+                                busy = false
+                                scope.launch(Dispatchers.IO) { storage.saveMessages(messages.toList()) }
                             }
                         }
                     }
@@ -346,6 +368,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
             else "Cloud provider requests use HTTPS. API keys are encrypted with Android Keystore.",
             color = Muted, fontSize = 9.sp, modifier = Modifier.padding(top = 7.dp)
         )
+        }
     }
 
     if (showSettings) {

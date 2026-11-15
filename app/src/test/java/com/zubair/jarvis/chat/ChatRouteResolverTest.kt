@@ -33,6 +33,18 @@ class ChatRouteResolverTest {
     }
 
     @Test
+    fun endpointWithoutModelOrKeyKeepsOptionalCloudProviderDisabled() {
+        assertEquals(
+            ChatRouteResolver.Route.SETUP_REQUIRED,
+            ChatRouteResolver.resolve(
+                false,
+                ProviderConfig("https://api.example.com/v1/chat/completions", ""),
+                ""
+            )
+        )
+    }
+
+    @Test
     fun invalidOrIncompleteCloudConfigurationNeverEnablesCloudInference() {
         assertEquals(
             ChatRouteResolver.Route.SETUP_REQUIRED,
