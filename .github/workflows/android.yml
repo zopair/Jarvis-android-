@@ -88,7 +88,7 @@ jobs:
 
   publish-test-prerelease:
     name: Publish verified test prerelease
-    if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+    if: (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') || (github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-test-release]'))
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -105,7 +105,7 @@ jobs:
         id: prepare_release
         shell: bash
         env:
-          RAW_RELEASE_TAG: ${{ inputs.release_tag }}
+          RAW_RELEASE_TAG: ${{ inputs.release_tag || 'v0.1.0-test' }}
         run: |
           # Normalize accidental whitespace or line breaks from the mobile form.
           RELEASE_TAG="$(printf '%s' "$RAW_RELEASE_TAG" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
