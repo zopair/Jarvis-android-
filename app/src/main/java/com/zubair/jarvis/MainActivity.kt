@@ -18,7 +18,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +40,8 @@ private val PanelRaised = Color(0xFF172338)
 private val Ice = Color(0xFF83D9F7)
 private val Muted = Color(0xFF91A1B8)
 private val Border = Color(0xFF26364D)
+private const val ANDROID_RELEASES_URL = "https://github.com/zopair/Jarvis-android-/releases/latest"
+private const val SOURCE_REPOSITORY_URL = "https://github.com/zopair/Jarvis-android-"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -150,6 +155,7 @@ private fun BrandHeader() {
 
 @Composable
 private fun HeroSection() {
+    val uriHandler = LocalUriHandler.current
     Text(
         "A MORE PERSONAL\nKIND OF INTELLIGENCE.",
         color = Color.White,
@@ -170,6 +176,21 @@ private fun HeroSection() {
         ValueTag("LOCAL-FIRST")
         ValueTag("USER-CONTROLLED")
         ValueTag("MODULAR")
+    }
+    Spacer(Modifier.height(22.dp))
+    Button(
+        onClick = { uriHandler.openUri(ANDROID_RELEASES_URL) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text("GET JARVIS FOR ANDROID", fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+    }
+    OutlinedButton(
+        onClick = { uriHandler.openUri(SOURCE_REPOSITORY_URL) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text("EXPLORE THE SOURCE ON GITHUB", color = Ice)
     }
 }
 
@@ -342,7 +363,7 @@ private fun RuntimeNotice() {
 @Composable
 private fun Footer() {
     Text(
-        "PRIVATE BY DESIGN  •  BUILT FOR ANDROID",
+        "CREATED BY ALY HUSSEIN ZOPAIR  •  PRIVATE BY DESIGN",
         modifier = Modifier.fillMaxWidth(),
         color = Color(0xFF65758B),
         fontSize = 8.sp,
