@@ -110,7 +110,7 @@ jobs:
         id: prepare_release
         shell: bash
         env:
-          RAW_RELEASE_TAG: ${{ inputs.release_tag || 'v0.1.0-test' }}
+          RAW_RELEASE_TAG: ${{ inputs.release_tag || 'v0.2.0-test' }}
         run: |
           # Normalize accidental whitespace or line breaks from the mobile form.
           RELEASE_TAG="$(printf '%s' "$RAW_RELEASE_TAG" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
