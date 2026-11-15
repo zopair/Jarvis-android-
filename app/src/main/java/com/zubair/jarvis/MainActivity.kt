@@ -247,7 +247,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
         )
         Surface(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            color = Panel,
+            color = Panel.copy(alpha = 0.86f),
             shape = RoundedCornerShape(18.dp)
         ) {
             if (messages.isEmpty()) {
