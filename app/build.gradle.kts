@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.zubair.jarvis"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.zubair.jarvis"
         minSdk = 26
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
 
