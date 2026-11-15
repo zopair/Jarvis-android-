@@ -70,7 +70,7 @@ Local or cloud   Android platform APIs
 providers
 ```
 
-The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tools**, and **Memory & Learning**. See [the architecture](docs/architecture/ANDROID_ARCHITECTURE.md) and [the delivery roadmap](docs/ROADMAP.md).
+The five OpenJarvis primitives are **Intelligence**, **Engine**, **Agentic Logic (Agents & Tools)**, **Memory**, and **Learning & Traces**. See [the architecture](docs/architecture/ANDROID_ARCHITECTURE.md) and [the delivery roadmap](docs/ROADMAP.md).
 
 ## Current implementation
 
