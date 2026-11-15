@@ -224,7 +224,12 @@ private fun JarvisChatApp(storage: ChatStorage) {
             }
         }
 
-        Text(localStatus, color = if (localEngine.isLoaded()) Color(0xFF75D9B0) else Muted, fontSize = 10.sp, modifier = Modifier.padding(top = 5.dp, bottom = 8.dp))
+        Text(
+            if (downloadProgress != null) "DOWNLOADING MODEL: " + downloadProgress + "%" else localStatus,
+            color = if (localEngine.isLoaded()) Color(0xFF75D9B0) else Muted,
+            fontSize = 10.sp,
+            modifier = Modifier.padding(top = 5.dp, bottom = 8.dp)
+        )
         Surface(
             modifier = Modifier.fillMaxWidth().weight(1f),
             color = Panel,
