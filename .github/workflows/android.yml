@@ -34,7 +34,12 @@ jobs:
         shell: bash
         run: |
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          test -x "$SDKMANAGER"
+          # sdkmanager may stop reading after accepting all licenses. Disable
+          # pipefail for this pipeline so yes receiving SIGPIPE is not a false failure.
+          set +o pipefail
           yes | "$SDKMANAGER" --licenses
+          set -o pipefail
 
       - name: Install Android platform
         shell: bash
