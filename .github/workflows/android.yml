@@ -138,6 +138,6 @@ jobs:
             dist/Jarvis-Android.apk.sha256 \
             --target "$GITHUB_SHA" \
             --title "Jarvis Android $RELEASE_TAG" \
-            --notes "TEST BUILD — Debug APK for device validation, not a stable production release. Built from commit $GITHUB_SHA. SHA-256 checksum is attached." \
+            --notes "TEST BUILD — Debug APK for device validation, not a stable production release. Built from commit $GITHUB_SHA. SHA-256 checksum is attached. Requires Android 8.0 (API 26) or newer. Download Jarvis-Android.apk, allow installation from this source if Android prompts, then install." \
             --prerelease \
             --latest=false
