@@ -137,7 +137,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                                 error = state.message
                             }
                         }
-                        busy = false
+                        busy = state == LocalModelEngine.State.Loading
                     }
                 } catch (failure: Exception) {
                     error = failure.message ?: "Could not import the GGUF model."
@@ -163,7 +163,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                         error = state.message
                     }
                 }
-                busy = false
+                busy = state == LocalModelEngine.State.Loading
             }
         }
     }
@@ -207,8 +207,8 @@ private fun JarvisChatApp(storage: ChatStorage) {
                                     LocalModelEngine.State.Unloaded -> localStatus = "No local model loaded"
                                     is LocalModelEngine.State.Failed -> { localStatus = "Local model unavailable"; error = state.message }
                                 }
-                                busy = false
-                                downloadProgress = null
+                                busy = state == LocalModelEngine.State.Loading
+                                if (state != LocalModelEngine.State.Loading) downloadProgress = null
                             }
                         } catch (failure: Exception) {
                             error = failure.message ?: "Model download failed."
