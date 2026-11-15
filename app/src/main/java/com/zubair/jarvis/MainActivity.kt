@@ -58,7 +58,7 @@ private val Panel = Color(0xFF121D30)
 private val Ice = Color(0xFF83D9F7)
 private val Muted = Color(0xFF91A1B8)
 private val UserBubble = Color(0xFF18364B)
-private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.1.0-test/Jarvis-Android.apk"
+private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.2.0-test/Jarvis-Android.apk"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
