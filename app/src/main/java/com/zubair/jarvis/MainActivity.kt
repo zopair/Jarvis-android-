@@ -120,7 +120,9 @@ private fun JarvisChatApp(storage: ChatStorage) {
                         context.contentResolver.openInputStream(uri)?.use { input ->
                             destination.outputStream().use { output -> input.copyTo(output) }
                         } ?: throw java.io.IOException("Android could not open the selected model file.")
-                        require(destination.length() > 0L) { "The selected model file is empty." }
+                        require(destination.length() > 4L) { "The selected model file is empty." }
+                        val magic = destination.inputStream().use { input -> ByteArray(4).also { input.read(it) } }
+                        require(String(magic, Charsets.US_ASCII) == "GGUF") { "This file is not a valid GGUF model." }
                         destination
                     }
                     storage.saveLocalModelPath(modelFile.absolutePath)
