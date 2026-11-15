@@ -70,7 +70,7 @@ private val Panel = Color(0xFF121D30)
 private val Ice = Color(0xFF83D9F7)
 private val Muted = Color(0xFF91A1B8)
 private val UserBubble = Color(0xFF18364B)
-private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.2.1-test/Jarvis-Android.apk"
+private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.2.2-test/Jarvis-Android.apk"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -153,32 +153,18 @@ private fun JarvisChatApp(storage: ChatStorage) {
         }
     }
 
-    LaunchedEffect(Unit) {
-        val savedPath = storage.loadLocalModelPath()
-        if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
-            busy = true
-            localStatus = "Loading saved local model…"
-            localEngine.loadModel(savedPath) { state ->
-                when (state) {
-                    LocalModelEngine.State.Loading -> localStatus = "Loading saved local model…"
-                    LocalModelEngine.State.Ready -> localStatus = "LOCAL MODEL READY"
-                    LocalModelEngine.State.Unloaded -> localStatus = "No local model loaded"
-                    is LocalModelEngine.State.Failed -> {
-                        localStatus = "Local model unavailable"
-                        error = state.message
-                    }
-                }
-                busy = state == LocalModelEngine.State.Loading
-            }
-        }
-    }
+    // Never initialize the native inference runtime automatically during cold start.
+    // A persisted GGUF path is retained, but the user explicitly starts model loading
+    // through GET MODEL / IMPORT after the Compose shell is visible. Native crashes
+    // (including SIGSEGV in JNI) cannot be contained by Kotlin try/catch.
 
     LaunchedEffect(messages.size, busy) {
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
     }
 
     Box(Modifier.fillMaxSize().background(Midnight)) {
-        AnimatedJarvisBackground(Modifier.fillMaxSize().alpha(0.22f))
+        // Keep startup independent from the Android GIF Movie/AndroidView renderer.
+        // Re-enable the animated layer only after device startup stability is verified.
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
