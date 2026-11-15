@@ -217,7 +217,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                     }
                 }) { Text("GET MODEL", color = Ice, fontSize = 10.sp) }
                 TextButton(enabled = !busy, onClick = { modelPicker.launch(arrayOf("*/*")) }) { Text("IMPORT", color = Ice, fontSize = 10.sp) }
-                TextButton(onClick = {
+                TextButton(enabled = !busy, onClick = {
                     messages.clear()
                     error = null
                     scope.launch(Dispatchers.IO) { storage.saveMessages(emptyList()) }
