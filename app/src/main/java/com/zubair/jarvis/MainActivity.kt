@@ -1,6 +1,8 @@
 package com.zubair.jarvis
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -52,6 +54,7 @@ import com.zubair.jarvis.chat.ChatStorage
 import com.zubair.jarvis.chat.OpenAiCompatibleProvider
 import com.zubair.jarvis.chat.ProviderConfig
 import com.zubair.jarvis.engine.LocalModelEngine
+import com.zubair.jarvis.engine.RecommendedModelDownloader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,6 +92,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
     val context = LocalContext.current
     val provider = remember { OpenAiCompatibleProvider() }
     val localEngine = remember { LocalModelEngine(context.applicationContext) }
+    val modelDownloader = remember { RecommendedModelDownloader(context.applicationContext) }
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val messages = remember {
         mutableStateListOf<ChatMessage>().apply { addAll(storage.loadMessages()) }
@@ -101,6 +105,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var localStatus by remember { mutableStateOf("No local model loaded") }
+    var downloadProgress by remember { mutableStateOf<Int?>(null) }
     var showSettings by remember { mutableStateOf(config.endpoint.isBlank() || config.model.isBlank() || apiKey.isBlank()) }
 
     val modelPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
