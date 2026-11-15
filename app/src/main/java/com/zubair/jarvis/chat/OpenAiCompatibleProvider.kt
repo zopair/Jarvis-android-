@@ -84,12 +84,8 @@ class OpenAiCompatibleProvider(
         }
         require(config.model.isNotBlank()) { "Enter a model name in Settings." }
         require(apiKey.isNotBlank()) { "Add your provider API key in Settings." }
-        require(messagesAreValid = true)
     }
 
-    private fun require(messagesAreValid: Boolean) {
-        require(messagesAreValid) { "At least one message is required." }
-    }
 
     private companion object {
         val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
