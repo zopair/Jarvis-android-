@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional test prerelease tag (example: v0.1.0-test). Leave blank for CI only."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -80,3 +85,49 @@ jobs:
             app/build/outputs/apk/debug/app-debug.apk.sha256
           if-no-files-found: error
           retention-days: 14
+
+  publish-test-prerelease:
+    name: Publish verified test prerelease
+    if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jarvis-android-debug-apk
+          path: dist
+
+      - name: Prepare release assets
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+-test([.-][A-Za-z0-9.-]+)?$ ]]; then
+            echo "Only test prerelease tags are allowed (example: v0.1.0-test)." >&2
+            exit 1
+          fi
+          test -s dist/app-debug.apk
+          mv dist/app-debug.apk dist/Jarvis-Android.apk
+          rm -f dist/app-debug.apk.sha256
+          (cd dist && sha256sum Jarvis-Android.apk > Jarvis-Android.apk.sha256)
+          test -s dist/Jarvis-Android.apk
+          test -s dist/Jarvis-Android.apk.sha256
+
+      - name: Create GitHub test prerelease and upload APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          gh release create "$RELEASE_TAG" \
+            dist/Jarvis-Android.apk \
+            dist/Jarvis-Android.apk.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Jarvis Android $RELEASE_TAG" \
+            --notes "TEST BUILD — Debug APK for device validation, not a stable production release. Built from commit $GITHUB_SHA. SHA-256 checksum is attached." \
+            --prerelease \
+            --latest=false
