@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zopair/Jarvis-android-/releases/download/v0.2.1-test/Jarvis-Android.apk"><img alt="Download for Android" src="https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white"></a>
+  <a href="https://github.com/zopair/Jarvis-android-/releases/download/v0.2.2-test/Jarvis-Android.apk"><img alt="Download for Android" src="https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white"></a>
   <a href="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml/badge.svg?branch=main"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
   <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin">
@@ -34,11 +34,11 @@ Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-j
 
 The app interface includes a direct Android release entry point:
 
-- **[Download Jarvis Android v0.2.1-test](https://github.com/zopair/Jarvis-android-/releases/download/v0.2.1-test/Jarvis-Android.apk)** — direct APK download for device testing.
+- **[Download Jarvis Android v0.2.2-test](https://github.com/zopair/Jarvis-android-/releases/download/v0.2.2-test/Jarvis-Android.apk)** — direct APK download for device testing.
 - [Browse all releases](https://github.com/zopair/Jarvis-android-/releases)
 - [Latest CI build artifacts](https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml) — temporary build artifacts are available from individual workflow runs.
 
-The direct APK link above points to the verified test prerelease. Test builds are not stable production releases.
+The direct APK link above points to the v0.2.2-test prerelease, which includes the deferred native-runtime initialization fix. Test builds are not stable production releases.
 
 ## Product principles
 
