@@ -26,7 +26,7 @@ Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-j
 
 **Project founder and creator:** Aly Hussein Zopair
 
-> **Implementation status:** foundation stage. The Android shell, product identity, reproducible Gradle Wrapper, CI pipeline, and initial security policy are in place. A working inference runtime, persistent chat, and agent execution are not yet implemented. The repository does not claim otherwise.
+> **Implementation status:** functional chat MVP in validation. The app includes an OpenAI-compatible HTTPS chat client, encrypted API-key storage backed by Android Keystore, and app-private conversation persistence. It requires the user to configure a compatible provider endpoint, model ID, and API key. On-device inference, voice, autonomous agents, and background actions are not implemented yet.
 
 ## Android app
 
@@ -81,7 +81,9 @@ The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tool
 - [x] Debug APK uploaded as a 14-day GitHub Actions artifact
 - [ ] First versioned public Android release
 - [ ] Domain contracts and application orchestration
-- [ ] Persistent local conversations
+- [x] Provider-backed chat UI and OpenAI-compatible HTTPS adapter
+- [x] App-private conversation history persistence
+- [x] Android Keystore AES-GCM encrypted provider API key storage
 - [ ] First verified on-device inference adapter
 - [ ] Tool registry, user approvals, and execution traces
 
@@ -104,6 +106,16 @@ On Windows:
 ```
 
 The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
+
+### Configure the chat provider
+
+1. Open Jarvis and enter **Settings**.
+2. Set an OpenAI-compatible HTTPS Chat Completions endpoint (the default is `https://api.openai.com/v1/chat/completions`).
+3. Enter the model ID accepted by your provider.
+4. Enter your own provider API key and save.
+5. Send a message. The key is encrypted with Android Keystore and is not embedded in the APK.
+
+The configured provider must implement the OpenAI-compatible `/chat/completions` request and response shape. The app does not ship with a bundled API key or free hosted inference service. Conversation history is stored in app-private internal storage.
 
 ## Security and responsible disclosure
 
