@@ -6,17 +6,37 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/zopair/Jarvis-android-/releases/latest"><img alt="Download for Android" src="https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white"></a>
   <a href="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml/badge.svg?branch=main"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
-  <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin&logoColor=white">
+  <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin">
   <img alt="Minimum SDK" src="https://img.shields.io/badge/minimum%20SDK-26-64748b">
   <img alt="Gradle" src="https://img.shields.io/badge/Gradle-9.5.0-02303A?logo=gradle">
-  <img alt="License" src="https://img.shields.io/badge/license-pending-lightgrey">
 </p>
+
+<p align="center">
+  <a href="https://github.com/zopair">GitHub Organization / Maintainer Profile</a>
+  · <a href="https://github.com/zopair/Jarvis-android-/issues">Issues</a>
+  · <a href="https://github.com/zopair/Jarvis-android-/discussions">Discussions</a>
+</p>
+
+## Project
 
 Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-jarvis/OpenJarvis) to a native Android application. The goal is a capable personal AI endpoint with on-device intelligence where practical, optional cloud inference, permission-aware tools, and user-controlled memory.
 
-> **Project status:** foundation stage. The Android shell, product identity, reproducible Gradle Wrapper, CI pipeline, and initial security policy are in place. A working inference runtime, persistent chat, and agent execution are not yet implemented. The repository does not claim otherwise.
+**Project founder and creator:** Aly Hussein Zopair
+
+> **Implementation status:** foundation stage. The Android shell, product identity, reproducible Gradle Wrapper, CI pipeline, and initial security policy are in place. A working inference runtime, persistent chat, and agent execution are not yet implemented. The repository does not claim otherwise.
+
+## Android app
+
+The app interface includes a direct Android release entry point:
+
+- **[Download the latest Android APK](https://github.com/zopair/Jarvis-android-/releases/latest)** — published stable builds will appear here.
+- [Browse all releases](https://github.com/zopair/Jarvis-android-/releases)
+- [Latest CI build artifacts](https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml) — temporary build artifacts are available from individual workflow runs.
+
+A release link may show no downloadable APK until the first GitHub Release is published. CI artifacts are temporary and are not a substitute for a versioned release.
 
 ## Product principles
 
@@ -53,11 +73,13 @@ The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tool
 ## Current implementation
 
 - [x] Native Android application shell and branded Compose foundation UI
+- [x] Android release and source-code entry points in the app interface
 - [x] Adaptive launcher icon and app theme
 - [x] Deny-by-default tool authorization policy and unit tests
 - [x] Official Gradle 9.5.0 Wrapper with distribution checksum verification
 - [x] Android CI: wrapper validation, unit tests, debug APK assembly, and artifact checksum
 - [x] Debug APK uploaded as a 14-day GitHub Actions artifact
+- [ ] First versioned public Android release
 - [ ] Domain contracts and application orchestration
 - [ ] Persistent local conversations
 - [ ] First verified on-device inference adapter
@@ -68,8 +90,6 @@ A green build validates the current foundation; it is not evidence that unfinish
 ## Build
 
 **Requirements:** JDK 17 and Android SDK with API 37 platform and Build Tools 37.0.0.
-
-The repository includes the official Gradle 9.5.0 Wrapper. The downloaded Gradle distribution is verified against its published SHA-256 checksum.
 
 ```bash
 ./gradlew testDebugUnitTest
@@ -83,15 +103,9 @@ On Windows:
 .\gradlew.bat assembleDebug
 ```
 
-The debug APK is generated at:
+The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
-
-For a ready-built APK, open the latest successful [Android CI run](https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml) and download the `jarvis-android-debug-apk` artifact. The artifact includes a SHA-256 checksum file.
-
-## Security model
+## Security and responsible disclosure
 
 - Model and retrieved content are untrusted input.
 - Unknown tools and missing capabilities are denied.
@@ -102,9 +116,14 @@ For a ready-built APK, open the latest successful [Android CI run](https://githu
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.
 
-## Contributing
+## Governance and contribution
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Keep changes focused, add tests for behavior, and do not mark a roadmap item complete until its acceptance criteria are verified.
+- [Contribution guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Issue tracker](https://github.com/zopair/Jarvis-android-/issues)
+- [Pull requests](https://github.com/zopair/Jarvis-android-/pulls)
+
+Changes should be focused, tested, documented, and reviewed. Do not mark roadmap items complete until their acceptance criteria are verified.
 
 ## Upstream inspiration
 
@@ -113,3 +132,11 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Keep chan
 - [OpenJarvis documentation](https://open-jarvis.github.io/OpenJarvis/)
 
 Jarvis Android is an independent Android-native implementation, not a direct port of the upstream Python/server runtime. OpenJarvis licensing does not automatically determine this repository's license.
+
+---
+
+<p align="center">
+  **Created and maintained by Aly Hussein Zopair**
+  <br/>
+  <a href="https://github.com/zopair">GitHub Profile</a>
+</p>
