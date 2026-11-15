@@ -114,7 +114,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                         val destination = File(context.filesDir, name)
                         context.contentResolver.openInputStream(uri)?.use { input ->
                             destination.outputStream().use { output -> input.copyTo(output) }
-                        } ?: error("Android could not open the selected model file.")
+                        } ?: throw java.io.IOException("Android could not open the selected model file.")
                         require(destination.length() > 0L) { "The selected model file is empty." }
                         destination
                     }
