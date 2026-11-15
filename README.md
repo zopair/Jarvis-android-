@@ -84,7 +84,8 @@ The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tool
 - [x] Provider-backed chat UI and OpenAI-compatible HTTPS adapter
 - [x] App-private conversation history persistence
 - [x] Android Keystore AES-GCM encrypted provider API key storage
-- [ ] First verified on-device inference adapter
+- [x] On-device GGUF inference adapter (llama.cpp via Android AI Kit)
+- [x] Pinned, SHA-256-verified Qwen2.5 0.5B model downloader
 - [ ] Tool registry, user approvals, and execution traces
 
 A green build validates the current foundation; it is not evidence that unfinished product capabilities are already available.
@@ -116,6 +117,12 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 5. Send a message. The key is encrypted with Android Keystore and is not embedded in the APK.
 
 The configured provider must implement the OpenAI-compatible `/chat/completions` request and response shape. The app does not ship with a bundled API key or free hosted inference service. Conversation history is stored in app-private internal storage.
+
+### Offline local inference
+
+Jarvis also integrates the MIT-licensed [Android AI Kit](https://github.com/its-hazratbilal/android-ai-kit), powered by llama.cpp. Tap **GET MODEL** to download the pinned Qwen2.5-0.5B-Instruct Q4_K_M GGUF file (approximately 398 MB) from Hugging Face; the app verifies its SHA-256 before loading. The model is Apache-2.0 licensed. The download is optional and is not bundled in the APK. You can also tap **IMPORT** to select another GGUF file from device storage. Once the local model is loaded, chat runs on-device without a provider API key or network requests. The runtime library recommends Android 11+ and at least 4 GB RAM; actual speed and successful loading depend on the phone's available memory and chipset. The included 0.5B model is intentionally small, but responses are less capable than larger cloud models.
+
+Third-party MIT license text is included in `THIRD_PARTY_NOTICES/ANDROID_AI_KIT.txt`.
 
 ## Security and responsible disclosure
 
