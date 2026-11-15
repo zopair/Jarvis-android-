@@ -1,7 +1,9 @@
 package com.zubair.jarvis.diagnostics
 
-import android.app.Application
 import android.app.ActivityManager
+import android.app.Application
+import android.app.ApplicationExitInfo
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import java.io.File
@@ -13,10 +15,8 @@ import java.util.Locale
 
 /**
  * Lightweight, local-only startup diagnostics.
- *
- * Does not collect message content, API keys, model paths, or network data.
- * Native fatal signals cannot be caught by this handler; previous process exit
- * reasons are collected on the next launch through ApplicationExitInfo.
+ * Fatal native signals cannot be caught here; historical exit information is
+ * inspected on the next launch through ApplicationExitInfo.
  */
 class JarvisApplication : Application() {
     override fun onCreate() {
@@ -41,7 +41,7 @@ object StartupDiagnostics {
             logFile = File(application.noBackupFilesDir, FILE_NAME)
             val previous = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { thread, error ->
-                record("UNCAUGHT_EXCEPTION thread=${thread.name} type=${error.javaClass.name} message=${error.message}")
+                record("UNCAUGHT_EXCEPTION thread=${thread.name} type=${error.javaClass.name}")
                 recordStack(error)
                 previous?.uncaughtException(thread, error)
             }
@@ -56,18 +56,21 @@ object StartupDiagnostics {
     fun recordPreviousExit(application: Application) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
         try {
-            val manager = application.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+            val manager = application.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+                ?: return
             val exits = manager.getHistoricalProcessExitReasons(application.packageName, 0, 8)
             exits.forEach { info ->
                 val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US)
                     .format(Date(info.timestamp))
                 record(
                     "PREVIOUS_EXIT timestamp=$timestamp reason=${info.reason} " +
-                        "status=${info.status} importance=${info.importance} " +
-                        "description=${info.description.orEmpty().take(240)}"
+                        "status=${info.status} importance=${info.importance}"
                 )
-                if (info.reason == ApplicationExitInfo.REASON_CRASH ||
-                    info.reason == ApplicationExitInfo.REASON_CRASH_NATIVE
+
+                // traceInputStream was added in API 31; API 30 devices must not call it.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    (info.reason == ApplicationExitInfo.REASON_CRASH ||
+                        info.reason == ApplicationExitInfo.REASON_CRASH_NATIVE)
                 ) {
                     try {
                         info.traceInputStream?.bufferedReader()?.use { reader ->
@@ -81,7 +84,7 @@ object StartupDiagnostics {
                 }
             }
         } catch (error: Exception) {
-            record("EXIT_INFO_ERROR type=${error.javaClass.name} message=${error.message}")
+            record("EXIT_INFO_ERROR type=${error.javaClass.name}")
         }
     }
 
