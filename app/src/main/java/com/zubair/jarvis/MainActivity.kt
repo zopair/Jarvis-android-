@@ -3,9 +3,10 @@ package com.zubair.jarvis
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -49,9 +51,11 @@ import com.zubair.jarvis.chat.ChatMessage
 import com.zubair.jarvis.chat.ChatStorage
 import com.zubair.jarvis.chat.OpenAiCompatibleProvider
 import com.zubair.jarvis.chat.ProviderConfig
+import com.zubair.jarvis.engine.LocalModelEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 private val Midnight = Color(0xFF070B14)
 private val Panel = Color(0xFF121D30)
@@ -82,7 +86,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun JarvisChatApp(storage: ChatStorage) {
+    val context = LocalContext.current
     val provider = remember { OpenAiCompatibleProvider() }
+    val localEngine = remember { LocalModelEngine(context.applicationContext) }
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val messages = remember {
         mutableStateListOf<ChatMessage>().apply { addAll(storage.loadMessages()) }
@@ -94,8 +100,63 @@ private fun JarvisChatApp(storage: ChatStorage) {
     var draft by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var showSettings by remember {
-        mutableStateOf(config.endpoint.isBlank() || config.model.isBlank() || apiKey.isBlank())
+    var localStatus by remember { mutableStateOf("No local model loaded") }
+    var showSettings by remember { mutableStateOf(config.endpoint.isBlank() || config.model.isBlank() || apiKey.isBlank()) }
+
+    val modelPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                busy = true
+                error = null
+                try {
+                    val modelFile = withContext(Dispatchers.IO) {
+                        val name = "jarvis-local-model.gguf"
+                        val destination = File(context.filesDir, name)
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            destination.outputStream().use { output -> input.copyTo(output) }
+                        } ?: error("Android could not open the selected model file.")
+                        require(destination.length() > 0L) { "The selected model file is empty." }
+                        destination
+                    }
+                    storage.saveLocalModelPath(modelFile.absolutePath)
+                    localStatus = "Loading local model…"
+                    localEngine.loadModel(modelFile.absolutePath) { state ->
+                        when (state) {
+                            LocalModelEngine.State.Loading -> localStatus = "Loading local model…"
+                            LocalModelEngine.State.Ready -> localStatus = "LOCAL MODEL READY"
+                            LocalModelEngine.State.Unloaded -> localStatus = "No local model loaded"
+                            is LocalModelEngine.State.Failed -> {
+                                localStatus = "Local model unavailable"
+                                error = state.message
+                            }
+                        }
+                        busy = false
+                    }
+                } catch (failure: Exception) {
+                    error = failure.message ?: "Could not import the GGUF model."
+                    localStatus = "No local model loaded"
+                    busy = false
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val savedPath = storage.loadLocalModelPath()
+        if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
+            localStatus = "Loading saved local model…"
+            localEngine.loadModel(savedPath) { state ->
+                when (state) {
+                    LocalModelEngine.State.Loading -> localStatus = "Loading saved local model…"
+                    LocalModelEngine.State.Ready -> localStatus = "LOCAL MODEL READY"
+                    LocalModelEngine.State.Unloaded -> localStatus = "No local model loaded"
+                    is LocalModelEngine.State.Failed -> {
+                        localStatus = "Local model unavailable"
+                        error = state.message
+                    }
+                }
+            }
+        }
     }
 
     LaunchedEffect(messages.size, busy) {
@@ -103,10 +164,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Midnight)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+        modifier = Modifier.fillMaxSize().background(Midnight).padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -117,18 +175,19 @@ private fun JarvisChatApp(storage: ChatStorage) {
                 Text("JARVIS", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
                 Text("ANDROID INTELLIGENCE", color = Muted, fontSize = 9.sp, letterSpacing = 1.5.sp)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                TextButton(onClick = { uriHandler.openUri(DIRECT_APK_URL) }) { Text("APK", color = Ice, fontSize = 11.sp) }
+            Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { uriHandler.openUri(DIRECT_APK_URL) }) { Text("APK", color = Ice, fontSize = 10.sp) }
+                TextButton(onClick = { modelPicker.launch(arrayOf("*/*")) }) { Text("LOCAL", color = Ice, fontSize = 10.sp) }
                 TextButton(onClick = {
                     messages.clear()
                     error = null
                     scope.launch(Dispatchers.IO) { storage.saveMessages(emptyList()) }
-                }) { Text("CLEAR", color = Muted, fontSize = 11.sp) }
-                OutlinedButton(onClick = { showSettings = true }) { Text("SETTINGS", color = Ice, fontSize = 11.sp) }
+                }) { Text("CLEAR", color = Muted, fontSize = 10.sp) }
+                TextButton(onClick = { showSettings = true }) { Text("SETTINGS", color = Ice, fontSize = 10.sp) }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Text(localStatus, color = if (localEngine.isLoaded()) Color(0xFF75D9B0) else Muted, fontSize = 10.sp, modifier = Modifier.padding(top = 5.dp, bottom = 8.dp))
         Surface(
             modifier = Modifier.fillMaxWidth().weight(1f),
             color = Panel,
@@ -145,10 +204,8 @@ private fun JarvisChatApp(storage: ChatStorage) {
                     Text("Ready when you are.", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Connect an OpenAI-compatible HTTPS provider in Settings, then send your first message.",
-                        color = Muted,
-                        fontSize = 13.sp,
-                        lineHeight = 20.sp
+                        "Choose LOCAL to load a GGUF model for offline chat, or configure a cloud provider in SETTINGS.",
+                        color = Muted, fontSize = 13.sp, lineHeight = 20.sp
                     )
                 }
             } else {
@@ -170,9 +227,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
             }
         }
 
-        error?.let {
-            Text(it, color = Color(0xFFFFA6A6), fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
-        }
+        error?.let { Text(it, color = Color(0xFFFFA6A6), fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp)) }
         Spacer(Modifier.height(10.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -194,37 +249,56 @@ private fun JarvisChatApp(storage: ChatStorage) {
                     if (text.isNotEmpty() && !busy) {
                         draft = ""
                         error = null
-                        val userMessage = ChatMessage("user", text)
-                        messages.add(userMessage)
+                        messages.add(ChatMessage("user", text))
                         busy = true
-                        scope.launch {
-                            try {
-                                val requestHistory = messages.toList()
-                                withContext(Dispatchers.IO) { storage.saveMessages(requestHistory) }
-                                val answer = provider.complete(config, apiKey, requestHistory)
-                                messages.add(ChatMessage("assistant", answer))
-                                val completedHistory = messages.toList()
-                                withContext(Dispatchers.IO) { storage.saveMessages(completedHistory) }
-                            } catch (failure: Exception) {
-                                error = failure.message ?: "The request failed. Check provider settings and connectivity."
-                                // Do not leave a failed user turn looking like a completed exchange.
-                            } finally {
-                                busy = false
+                        if (localEngine.isLoaded()) {
+                            messages.add(ChatMessage("assistant", ""))
+                            val assistantIndex = messages.lastIndex
+                            localEngine.send(text, null) { result ->
+                                when (result) {
+                                    LocalModelEngine.Generation.Started -> Unit
+                                    is LocalModelEngine.Generation.Token -> {
+                                        val previous = messages[assistantIndex]
+                                        messages[assistantIndex] = previous.copy(content = previous.content + result.value)
+                                    }
+                                    is LocalModelEngine.Generation.Completed -> {
+                                        messages[assistantIndex] = messages[assistantIndex].copy(content = result.text)
+                                        busy = false
+                                        scope.launch(Dispatchers.IO) { storage.saveMessages(messages.toList()) }
+                                    }
+                                    is LocalModelEngine.Generation.Failed -> {
+                                        error = result.message
+                                        busy = false
+                                    }
+                                    LocalModelEngine.Generation.Cancelled -> busy = false
+                                }
+                            }
+                        } else {
+                            scope.launch {
+                                try {
+                                    val requestHistory = messages.toList()
+                                    withContext(Dispatchers.IO) { storage.saveMessages(requestHistory) }
+                                    val answer = provider.complete(config, apiKey, requestHistory)
+                                    messages.add(ChatMessage("assistant", answer))
+                                    val completedHistory = messages.toList()
+                                    withContext(Dispatchers.IO) { storage.saveMessages(completedHistory) }
+                                } catch (failure: Exception) {
+                                    error = failure.message ?: "The request failed. Check provider settings and connectivity."
+                                } finally {
+                                    busy = false
+                                }
                             }
                         }
                     }
                 },
                 enabled = !busy && draft.isNotBlank(),
                 modifier = Modifier.padding(bottom = 4.dp)
-            ) {
-                Text("SEND")
-            }
+            ) { Text("SEND") }
         }
         Text(
-            "Provider requests use HTTPS. Your API key is encrypted with Android Keystore.",
-            color = Muted,
-            fontSize = 9.sp,
-            modifier = Modifier.padding(top = 7.dp)
+            if (localEngine.isLoaded()) "On-device inference is active. Messages stay on this phone."
+            else "Cloud provider requests use HTTPS. API keys are encrypted with Android Keystore.",
+            color = Muted, fontSize = 9.sp, modifier = Modifier.padding(top = 7.dp)
         )
     }
 
@@ -254,23 +328,14 @@ private fun JarvisChatApp(storage: ChatStorage) {
 @Composable
 private fun MessageBubble(message: ChatMessage) {
     val isUser = message.role == "user"
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
-    ) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start) {
         Surface(
             modifier = Modifier.widthIn(max = 300.dp),
             color = if (isUser) UserBubble else Color(0xFF1A263B),
             shape = RoundedCornerShape(15.dp)
         ) {
             Column(Modifier.padding(horizontal = 13.dp, vertical = 10.dp)) {
-                Text(
-                    if (isUser) "YOU" else "JARVIS",
-                    color = if (isUser) Ice else Color(0xFF75D9B0),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
+                Text(if (isUser) "YOU" else "JARVIS", color = if (isUser) Ice else Color(0xFF75D9B0), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(message.content, color = Color.White, fontSize = 14.sp, lineHeight = 20.sp)
             }
@@ -296,49 +361,26 @@ private fun ProviderSettingsDialog(
         title = { Text("Connect a model provider") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Text(
-                    "Jarvis currently supports OpenAI-compatible HTTPS chat-completions endpoints. Add a provider URL, model ID and API key.",
-                    color = Muted,
-                    fontSize = 12.sp
-                )
+                Text("For cloud chat, add an OpenAI-compatible HTTPS endpoint, model ID and provider API key. Local GGUF models work without a key.", color = Muted, fontSize = 12.sp)
+                OutlinedTextField(value = endpoint, onValueChange = { endpoint = it }, label = { Text("HTTPS endpoint") }, singleLine = true)
+                OutlinedTextField(value = model, onValueChange = { model = it }, label = { Text("Model ID") }, singleLine = true)
                 OutlinedTextField(
-                    value = endpoint,
-                    onValueChange = { endpoint = it },
-                    label = { Text("HTTPS endpoint") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = model,
-                    onValueChange = { model = it },
-                    label = { Text("Model ID") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = apiKey,
-                    onValueChange = { apiKey = it },
+                    value = apiKey, onValueChange = { apiKey = it },
                     label = { Text(if (initialApiKey.isBlank()) "API key" else "New API key (blank keeps saved key)") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true, visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
-                if (initialApiKey.isNotBlank()) {
-                    TextButton(onClick = onClearKey) { Text("Remove saved API key", color = Color(0xFFFFA6A6)) }
-                }
+                if (initialApiKey.isNotBlank()) TextButton(onClick = onClearKey) { Text("Remove saved API key", color = Color(0xFFFFA6A6)) }
                 validationError?.let { Text(it, color = Color(0xFFFFA6A6), fontSize = 11.sp) }
             }
         },
         confirmButton = {
             Button(onClick = {
                 val uri = runCatching { java.net.URI(endpoint.trim()) }.getOrNull()
-                if (uri == null || !uri.scheme.equals("https", true) || uri.host.isNullOrBlank()) {
-                    validationError = "Enter a valid HTTPS endpoint."
-                } else if (model.isBlank()) {
-                    validationError = "Enter the provider's model ID."
-                } else if (apiKey.isBlank() && initialApiKey.isBlank()) {
-                    validationError = "Enter an API key."
-                } else {
-                    onSave(ProviderConfig(endpoint.trim(), model.trim()), apiKey.trim())
-                }
+                if (uri == null || !uri.scheme.equals("https", true) || uri.host.isNullOrBlank()) validationError = "Enter a valid HTTPS endpoint."
+                else if (model.isBlank()) validationError = "Enter the provider's model ID."
+                else if (apiKey.isBlank() && initialApiKey.isBlank()) validationError = "Enter an API key."
+                else onSave(ProviderConfig(endpoint.trim(), model.trim()), apiKey.trim())
             }) { Text("SAVE PROVIDER") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("CANCEL") } },
