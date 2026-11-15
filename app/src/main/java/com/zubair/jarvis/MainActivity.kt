@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
         val storage = ChatStorage(applicationContext)
         StartupDiagnostics.mark("BEFORE_COMPOSE_SET_CONTENT")
         setContent {
-            StartupDiagnostics.mark("COMPOSE_CONTENT_ENTERED")
+            LaunchedEffect(Unit) { StartupDiagnostics.mark("COMPOSE_CONTENT_ENTERED") }
             MaterialTheme(
                 colorScheme = darkColorScheme(
                     primary = Ice,
@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun JarvisChatApp(storage: ChatStorage) {
-    androidx.compose.runtime.SideEffect { StartupDiagnostics.mark("COMPOSE_FIRST_COMPOSITION") }
+    LaunchedEffect(Unit) { StartupDiagnostics.mark("COMPOSE_FIRST_COMPOSITION") }
     val context = LocalContext.current
     val provider = remember { OpenAiCompatibleProvider() }
     val localEngine = remember { LocalModelEngine(context.applicationContext) }
