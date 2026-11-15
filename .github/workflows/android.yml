@@ -5,13 +5,16 @@ on:
     branches: [main, "feat/**"]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   verify:
+    name: Build and test
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -27,16 +30,19 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.5.0"
+
+      - name: Verify Gradle Wrapper
+        shell: bash
+        run: |
+          echo "497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check --strict
+          chmod +x gradlew
+          ./gradlew --version
 
       - name: Accept Android SDK licenses
         shell: bash
         run: |
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
           test -x "$SDKMANAGER"
-          # sdkmanager may stop reading after accepting all licenses. Disable
-          # pipefail for this pipeline so yes receiving SIGPIPE is not a false failure.
           set +o pipefail
           yes | "$SDKMANAGER" --licenses
           set -o pipefail
@@ -45,27 +51,32 @@ jobs:
         shell: bash
         run: |
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
-          # Android 17 preview is published as android-37.0 and may require
-          # a non-stable SDK channel. Include all channels when resolving it.
           "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
-          # AGP resolves compileSdk 37 using android-37; SDK Manager currently
-          # installs the preview package into android-37.0.
           if [ ! -e "$ANDROID_HOME/platforms/android-37" ]; then
             ln -s "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
           fi
           test -d "$ANDROID_HOME/platforms/android-37"
 
       - name: Unit tests
-        run: gradle testDebugUnitTest
+        run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: Assemble debug APK
-        run: gradle assembleDebug
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Verify APK and generate checksum
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          sha256sum "$APK" > "$APK.sha256"
+          cat "$APK.sha256"
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: jarvis-android-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/app-debug.apk.sha256
           if-no-files-found: error
           retention-days: 14
-
