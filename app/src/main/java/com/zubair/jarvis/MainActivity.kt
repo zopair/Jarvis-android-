@@ -437,6 +437,44 @@ private fun MessageBubble(message: ChatMessage) {
 }
 
 @Composable
+private fun StartupDiagnosticsDialog(
+    onDismiss: () -> Unit,
+    onExport: () -> Unit
+) {
+    val preview = remember { StartupDiagnostics.readPreview() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Startup diagnostics") },
+        text = {
+            Column(
+                modifier = Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Diagnostics are stored locally. Export only when needed; review the file before sharing because it may contain device and exception details.",
+                    color = Muted,
+                    fontSize = 12.sp
+                )
+                Text(
+                    preview.ifBlank { "No startup log is available yet. Open the app again to record startup milestones." },
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    lineHeight = 14.sp
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onExport) { Text("EXPORT LOG") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("CLOSE") }
+        },
+        containerColor = Panel
+    )
+}
+
+@Composable
 private fun ProviderSettingsDialog(
     initialConfig: ProviderConfig,
     initialApiKey: String,
