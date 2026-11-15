@@ -182,7 +182,39 @@ private fun JarvisChatApp(storage: ChatStorage) {
             }
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { uriHandler.openUri(DIRECT_APK_URL) }) { Text("APK", color = Ice, fontSize = 10.sp) }
-                TextButton(onClick = { modelPicker.launch(arrayOf("*/*")) }) { Text("LOCAL", color = Ice, fontSize = 10.sp) }
+                TextButton(enabled = !busy, onClick = {
+                    scope.launch {
+                        busy = true
+                        error = null
+                        downloadProgress = 0
+                        localStatus = "Downloading verified Qwen model…"
+                        try {
+                            val modelFile = withContext(Dispatchers.IO) {
+                                modelDownloader.download { progress ->
+                                    Handler(Looper.getMainLooper()).post { downloadProgress = progress }
+                                }
+                            }
+                            storage.saveLocalModelPath(modelFile.absolutePath)
+                            localStatus = "Loading local model…"
+                            localEngine.loadModel(modelFile.absolutePath) { state ->
+                                when (state) {
+                                    LocalModelEngine.State.Loading -> localStatus = "Loading local model…"
+                                    LocalModelEngine.State.Ready -> localStatus = "LOCAL MODEL READY"
+                                    LocalModelEngine.State.Unloaded -> localStatus = "No local model loaded"
+                                    is LocalModelEngine.State.Failed -> { localStatus = "Local model unavailable"; error = state.message }
+                                }
+                                busy = false
+                                downloadProgress = null
+                            }
+                        } catch (failure: Exception) {
+                            error = failure.message ?: "Model download failed."
+                            localStatus = "No local model loaded"
+                            busy = false
+                            downloadProgress = null
+                        }
+                    }
+                }) { Text("GET MODEL", color = Ice, fontSize = 10.sp) }
+                TextButton(enabled = !busy, onClick = { modelPicker.launch(arrayOf("*/*")) }) { Text("IMPORT", color = Ice, fontSize = 10.sp) }
                 TextButton(onClick = {
                     messages.clear()
                     error = null
