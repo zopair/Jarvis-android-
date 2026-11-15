@@ -10,7 +10,7 @@
   <a href="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml/badge.svg?branch=main"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
   <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin">
-  <img alt="Minimum SDK" src="https://img.shields.io/badge/minimum%20SDK-26-64748b">
+  <img alt="Minimum SDK" src="https://img.shields.io/badge/minimum%20SDK-30-64748b">
   <img alt="Gradle" src="https://img.shields.io/badge/Gradle-9.5.0-02303A?logo=gradle">
 </p>
 
