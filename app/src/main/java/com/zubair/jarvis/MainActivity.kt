@@ -151,6 +151,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
     LaunchedEffect(Unit) {
         val savedPath = storage.loadLocalModelPath()
         if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
+            busy = true
             localStatus = "Loading saved local model…"
             localEngine.loadModel(savedPath) { state ->
                 when (state) {
@@ -162,6 +163,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                         error = state.message
                     }
                 }
+                busy = false
             }
         }
     }
