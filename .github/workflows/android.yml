@@ -41,11 +41,19 @@ jobs:
           yes | "$SDKMANAGER" --licenses
           set -o pipefail
 
-      - name: Install Android platform
+      - name: Install Android 17 SDK platform
         shell: bash
         run: |
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
-          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+          # Android 17 preview is published as android-37.0 and may require
+          # a non-stable SDK channel. Include all channels when resolving it.
+          "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
+          # AGP resolves compileSdk 37 using android-37; SDK Manager currently
+          # installs the preview package into android-37.0.
+          if [ ! -e "$ANDROID_HOME/platforms/android-37" ]; then
+            ln -s "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
+          fi
+          test -d "$ANDROID_HOME/platforms/android-37"
 
       - name: Unit tests
         run: gradle testDebugUnitTest
