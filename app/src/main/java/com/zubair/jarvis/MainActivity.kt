@@ -106,7 +106,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
     var error by remember { mutableStateOf<String?>(null) }
     var localStatus by remember { mutableStateOf("No local model loaded") }
     var downloadProgress by remember { mutableStateOf<Int?>(null) }
-    var showSettings by remember { mutableStateOf(config.endpoint.isBlank() || config.model.isBlank() || apiKey.isBlank()) }
+    var showSettings by remember { mutableStateOf(false) }
 
     val modelPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
