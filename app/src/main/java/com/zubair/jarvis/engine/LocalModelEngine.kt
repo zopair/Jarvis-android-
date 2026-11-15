@@ -12,30 +12,48 @@ import com.hazratbilal.aikit.core.AiKitEngine
  * Model files are user-selected GGUF files and remain in app-private storage.
  */
 class LocalModelEngine(context: Context) {
-    private val engine = AiKitEngine.create(context.applicationContext)
+    // Do not initialize JNI/native inference during Activity composition. Some
+    // devices may not support a packaged ABI or native runtime; that must never
+    // prevent the app shell from starting.
+    private val engineDelegate = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        AiKitEngine.create(context.applicationContext)
+    }
+    private val engine: AiKitEngine get() = engineDelegate.value
     private val mainHandler = Handler(Looper.getMainLooper())
     private var chat: AiKitChat? = null
 
-    fun isLoaded(): Boolean = engine.isModelLoaded()
+    fun isLoaded(): Boolean =
+        engineDelegate.isInitialized() && runCatching { engine.isModelLoaded() }.getOrDefault(false)
 
-    fun currentModelPath(): String? = engine.currentModelPath()
+    fun currentModelPath(): String? =
+        if (engineDelegate.isInitialized()) runCatching { engine.currentModelPath() }.getOrNull() else null
 
     fun loadModel(path: String, onState: (State) -> Unit) {
-        engine.loadModel(path, object : AiKitEngine.ModelStateListener {
-            override fun onModelLoading() = dispatch { onState(State.Loading) }
-            override fun onModelLoaded() {
-                chat = engine.chat()
-                dispatch { onState(State.Ready) }
+        try {
+            engine.loadModel(path, object : AiKitEngine.ModelStateListener {
+                override fun onModelLoading() = dispatch { onState(State.Loading) }
+                override fun onModelLoaded() {
+                    try {
+                        chat = engine.chat()
+                        dispatch { onState(State.Ready) }
+                    } catch (failure: Throwable) {
+                        dispatch { onState(State.Failed(failure.message ?: "Local chat runtime could not initialize.")) }
+                    }
+                }
+                override fun onModelError(error: Throwable) =
+                    dispatch { onState(State.Failed(error.message ?: "Local model could not be loaded.")) }
+                override fun onModelUnloaded() = dispatch { onState(State.Unloaded) }
+            })
+        } catch (failure: Throwable) {
+            dispatch {
+                onState(State.Failed(failure.message ?: "This device could not initialize the local AI runtime. The app remains available; try another GGUF runtime or device."))
             }
-            override fun onModelError(error: Throwable) =
-                dispatch { onState(State.Failed(error.message ?: "Local model could not be loaded.")) }
-            override fun onModelUnloaded() = dispatch { onState(State.Unloaded) }
-        })
+        }
     }
 
     fun send(prompt: String, systemPrompt: String?, onState: (Generation) -> Unit) {
         val activeChat = chat
-        if (activeChat == null || !engine.isModelLoaded()) {
+        if (activeChat == null || !isLoaded()) {
             onState(Generation.Failed("Load a GGUF model before sending a message."))
             return
         }
