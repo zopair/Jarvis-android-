@@ -26,7 +26,7 @@ Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-j
 
 **Project founder and creator:** Aly Hussein Zopair
 
-> **Implementation status:** functional chat MVP in validation. The app includes an OpenAI-compatible HTTPS chat client, encrypted API-key storage backed by Android Keystore, and app-private conversation persistence. It requires the user to configure a compatible provider endpoint, model ID, and API key. On-device inference, voice, autonomous agents, and background actions are not implemented yet.
+> **Implementation status:** functional chat MVP in validation. Jarvis supports offline GGUF inference through llama.cpp, persistent local chat history, and an optional OpenAI-compatible HTTPS cloud provider. Cloud API keys are optional and encrypted with Android Keystore. Voice, autonomous agents, and background actions are not implemented yet.
 
 ## Android app
 
