@@ -90,6 +90,12 @@ object StartupDiagnostics {
 
     fun exportFile(): File? = if (::logFile.isInitialized && logFile.exists()) logFile else null
 
+    fun readPreview(maxLines: Int = 80): String {
+        val file = exportFile() ?: return ""
+        return runCatching { file.readLines().takeLast(maxLines).joinToString("\n") }
+            .getOrElse { "Unable to read diagnostics: ${it.javaClass.simpleName}" }
+    }
+
     private fun recordStack(error: Throwable) {
         val writer = StringWriter()
         error.printStackTrace(PrintWriter(writer))

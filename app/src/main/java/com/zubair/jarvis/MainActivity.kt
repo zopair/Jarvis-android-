@@ -3,6 +3,7 @@ package com.zubair.jarvis
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,10 +17,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -117,6 +120,28 @@ private fun JarvisChatApp(storage: ChatStorage) {
     var localStatus by remember { mutableStateOf("No local model loaded") }
     var downloadProgress by remember { mutableStateOf<Int?>(null) }
     var showSettings by remember { mutableStateOf(false) }
+    var showDiagnostics by remember { mutableStateOf(false) }
+
+    val diagnosticsExporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val result = runCatching {
+                    withContext(Dispatchers.IO) {
+                        val source = StartupDiagnostics.exportFile()
+                            ?: throw java.io.IOException("No startup diagnostics have been recorded yet.")
+                        val output = context.contentResolver.openOutputStream(uri)
+                            ?: throw java.io.IOException("Android could not create the export file.")
+                        output.use { stream -> source.inputStream().use { input -> input.copyTo(stream) } }
+                    }
+                }
+                Toast.makeText(
+                    context,
+                    result.fold({ "Diagnostics exported successfully." }, { it.message ?: "Export failed." }),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
 
     val modelPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -228,6 +253,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                     scope.launch(Dispatchers.IO) { storage.saveMessages(emptyList()) }
                 }) { Text("CLEAR", color = Muted, fontSize = 11.sp) }
                 TextButton(onClick = { showSettings = true }) { Text("SETTINGS", color = Ice, fontSize = 11.sp) }
+                TextButton(onClick = { showDiagnostics = true }) { Text("DIAGNOSTICS", color = Ice, fontSize = 11.sp) }
             }
 
         Text(
@@ -362,6 +388,13 @@ private fun JarvisChatApp(storage: ChatStorage) {
         }
     }
 
+    if (showDiagnostics) {
+        StartupDiagnosticsDialog(
+            onDismiss = { showDiagnostics = false },
+            onExport = { diagnosticsExporter.launch("jarvis-startup-diagnostics.txt") }
+        )
+    }
+
     if (showSettings) {
         ProviderSettingsDialog(
             initialConfig = config,
@@ -401,6 +434,44 @@ private fun MessageBubble(message: ChatMessage) {
             }
         }
     }
+}
+
+@Composable
+private fun StartupDiagnosticsDialog(
+    onDismiss: () -> Unit,
+    onExport: () -> Unit
+) {
+    val preview = remember { StartupDiagnostics.readPreview() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Startup diagnostics") },
+        text = {
+            Column(
+                modifier = Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Diagnostics are stored locally. Export only when needed; review the file before sharing because it may contain device and exception details.",
+                    color = Muted,
+                    fontSize = 12.sp
+                )
+                Text(
+                    preview.ifBlank { "No startup log is available yet. Open the app again to record startup milestones." },
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    lineHeight = 14.sp
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onExport) { Text("EXPORT LOG") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("CLOSE") }
+        },
+        containerColor = Panel
+    )
 }
 
 @Composable
