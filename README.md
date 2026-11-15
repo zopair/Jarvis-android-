@@ -10,7 +10,7 @@
   <a href="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml/badge.svg?branch=main"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
   <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin">
-  <img alt="Minimum SDK" src="https://img.shields.io/badge/minimum%20SDK-26-64748b">
+  <img alt="Minimum SDK" src="https://img.shields.io/badge/minimum%20SDK-30-64748b">
   <img alt="Gradle" src="https://img.shields.io/badge/Gradle-9.5.0-02303A?logo=gradle">
 </p>
 
@@ -26,7 +26,7 @@ Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-j
 
 **Project founder and creator:** Aly Hussein Zopair
 
-> **Implementation status:** foundation stage. The Android shell, product identity, reproducible Gradle Wrapper, CI pipeline, and initial security policy are in place. A working inference runtime, persistent chat, and agent execution are not yet implemented. The repository does not claim otherwise.
+> **Implementation status:** functional chat MVP in validation. Jarvis supports offline GGUF inference through llama.cpp, persistent local chat history, and an optional OpenAI-compatible HTTPS cloud provider. Cloud API keys are optional and encrypted with Android Keystore. Voice, autonomous agents, and background actions are not implemented yet.
 
 ## Android app
 
@@ -81,8 +81,11 @@ The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tool
 - [x] Debug APK uploaded as a 14-day GitHub Actions artifact
 - [ ] First versioned public Android release
 - [ ] Domain contracts and application orchestration
-- [ ] Persistent local conversations
-- [ ] First verified on-device inference adapter
+- [x] Provider-backed chat UI and OpenAI-compatible HTTPS adapter
+- [x] App-private conversation history persistence
+- [x] Android Keystore AES-GCM encrypted provider API key storage
+- [x] On-device GGUF inference adapter (llama.cpp via Android AI Kit)
+- [x] Pinned, SHA-256-verified Qwen2.5 0.5B model downloader
 - [ ] Tool registry, user approvals, and execution traces
 
 A green build validates the current foundation; it is not evidence that unfinished product capabilities are already available.
@@ -104,6 +107,22 @@ On Windows:
 ```
 
 The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
+
+### Configure the chat provider
+
+1. Open Jarvis and enter **Settings**.
+2. Set an OpenAI-compatible HTTPS Chat Completions endpoint (the default is `https://api.openai.com/v1/chat/completions`).
+3. Enter the model ID accepted by your provider.
+4. Enter your own provider API key and save.
+5. Send a message. The key is encrypted with Android Keystore and is not embedded in the APK.
+
+The configured provider must implement the OpenAI-compatible `/chat/completions` request and response shape. The app does not ship with a bundled API key or free hosted inference service. Conversation history is stored in app-private internal storage.
+
+### Offline local inference
+
+Jarvis also integrates the MIT-licensed [Android AI Kit](https://github.com/its-hazratbilal/android-ai-kit), powered by llama.cpp. Tap **GET MODEL** to download the pinned Qwen2.5-0.5B-Instruct Q4_K_M GGUF file (approximately 398 MB) from Hugging Face; the app verifies its SHA-256 before loading. The model is Apache-2.0 licensed. The download is optional and is not bundled in the APK. You can also tap **IMPORT** to select another GGUF file from device storage. Once the local model is loaded, chat runs on-device without a provider API key or network requests. The runtime library recommends Android 11+ and at least 4 GB RAM; actual speed and successful loading depend on the phone's available memory and chipset. The included 0.5B model is intentionally small, but responses are less capable than larger cloud models.
+
+Third-party MIT license text is included in `THIRD_PARTY_NOTICES/ANDROID_AI_KIT.txt`.
 
 ## Security and responsible disclosure
 
