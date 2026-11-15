@@ -58,6 +58,7 @@ private val Panel = Color(0xFF121D30)
 private val Ice = Color(0xFF83D9F7)
 private val Muted = Color(0xFF91A1B8)
 private val UserBubble = Color(0xFF18364B)
+private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/latest/download/Jarvis-Android.apk"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +83,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun JarvisChatApp(storage: ChatStorage) {
     val provider = remember { OpenAiCompatibleProvider() }
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val messages = remember {
         mutableStateListOf<ChatMessage>().apply { addAll(storage.loadMessages()) }
     }
@@ -116,6 +118,7 @@ private fun JarvisChatApp(storage: ChatStorage) {
                 Text("ANDROID INTELLIGENCE", color = Muted, fontSize = 9.sp, letterSpacing = 1.5.sp)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                TextButton(onClick = { uriHandler.openUri(DIRECT_APK_URL) }) { Text("APK", color = Ice, fontSize = 11.sp) }
                 TextButton(onClick = {
                     messages.clear()
                     error = null
