@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.zubair.jarvis"
-        minSdk = 26
+        minSdk = 30
         // Keep runtime behavior opt-in separate from compile SDK migration.
         targetSdk = 36
         versionCode = 1
