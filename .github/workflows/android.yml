@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Optional test prerelease tag (example: v0.2.1-test). Leave blank for CI only."
+        description: "Optional test prerelease tag (example: v0.2.2-test). Leave blank for CI only."
         required: false
         type: string
 
@@ -110,13 +110,13 @@ jobs:
         id: prepare_release
         shell: bash
         env:
-          RAW_RELEASE_TAG: ${{ inputs.release_tag || 'v0.2.1-test' }}
+          RAW_RELEASE_TAG: ${{ inputs.release_tag || 'v0.2.2-test' }}
         run: |
           # Normalize accidental whitespace or line breaks from the mobile form.
           RELEASE_TAG="$(printf '%s' "$RAW_RELEASE_TAG" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
           echo "Requested test tag: [$RELEASE_TAG]"
           if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-test([.-][A-Za-z0-9.-]+)?$ ]]; then
-            echo "Invalid test tag. Use a tag such as v0.2.1-test (whitespace is ignored)." >&2
+            echo "Invalid test tag. Use a tag such as v0.2.2-test (whitespace is ignored)." >&2
             exit 1
           fi
           echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
