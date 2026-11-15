@@ -60,6 +60,7 @@ import com.zubair.jarvis.chat.OpenAiCompatibleProvider
 import com.zubair.jarvis.chat.ProviderConfig
 import com.zubair.jarvis.engine.LocalModelEngine
 import com.zubair.jarvis.engine.RecommendedModelDownloader
+import com.zubair.jarvis.diagnostics.StartupDiagnostics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -75,8 +76,11 @@ private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/re
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        StartupDiagnostics.mark("MAIN_ACTIVITY_ON_CREATE")
         val storage = ChatStorage(applicationContext)
+        StartupDiagnostics.mark("BEFORE_COMPOSE_SET_CONTENT")
         setContent {
+            StartupDiagnostics.mark("COMPOSE_CONTENT_ENTERED")
             MaterialTheme(
                 colorScheme = darkColorScheme(
                     primary = Ice,
@@ -94,6 +98,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun JarvisChatApp(storage: ChatStorage) {
+    androidx.compose.runtime.SideEffect { StartupDiagnostics.mark("COMPOSE_FIRST_COMPOSITION") }
     val context = LocalContext.current
     val provider = remember { OpenAiCompatibleProvider() }
     val localEngine = remember { LocalModelEngine(context.applicationContext) }
