@@ -151,8 +151,7 @@ private fun BrandHeader() {
 @Composable
 private fun HeroSection() {
     Text(
-        "A MORE PERSONAL
-KIND OF INTELLIGENCE.",
+        "A MORE PERSONAL\nKIND OF INTELLIGENCE.",
         color = Color.White,
         fontSize = 30.sp,
         lineHeight = 37.sp,
