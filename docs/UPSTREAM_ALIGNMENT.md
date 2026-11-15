@@ -15,9 +15,9 @@ Jarvis Android is based on the product architecture and design principles of [Op
 |---|---|
 | Intelligence / model catalog | Device-aware model metadata, local model compatibility and provider-neutral routing |
 | Engine | Local GGUF runtime adapter plus optional OpenAI-compatible HTTPS adapter |
-| Agents | Bounded orchestration layer; no autonomous execution until policy and approval gates are implemented |
-| Tools | Android capability adapters behind deny-by-default authorization and explicit confirmation |
-| Memory & Learning | App-private conversation history first; user-controlled memory and inspectable traces are later milestones |
+| Agentic Logic (Agents & Tools) | Bounded orchestration and Android capability adapters behind deny-by-default authorization and explicit confirmation |
+| Memory | App-private conversation history first; user-controlled semantic memory is a later milestone |
+| Learning & Traces | Inspectable execution traces and evidence-based routing improvements; no silent model training |
 
 ## Reuse policy
 
