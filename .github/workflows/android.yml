@@ -102,14 +102,19 @@ jobs:
           path: dist
 
       - name: Prepare release assets
+        id: prepare_release
         shell: bash
         env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          RAW_RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
+          # Normalize accidental whitespace or line breaks from the mobile form.
+          RELEASE_TAG="$(printf '%s' "$RAW_RELEASE_TAG" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+          echo "Requested test tag: [$RELEASE_TAG]"
           if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-test([.-][A-Za-z0-9.-]+)?$ ]]; then
-            echo "Only test prerelease tags are allowed (example: v0.1.0-test)." >&2
+            echo "Invalid test tag. Use exactly v0.1.0-test (whitespace is ignored)." >&2
             exit 1
           fi
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
           test -s dist/app-debug.apk
           mv dist/app-debug.apk dist/Jarvis-Android.apk
           rm -f dist/app-debug.apk.sha256
@@ -120,7 +125,7 @@ jobs:
       - name: Create GitHub test prerelease and upload APK
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_TAG: ${{ steps.prepare_release.outputs.release_tag }}
         shell: bash
         run: |
           gh release create "$RELEASE_TAG" \
