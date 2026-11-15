@@ -53,6 +53,16 @@ class ChatStorage(context: Context) {
         preferences.edit().remove(KEY_API_IV).remove(KEY_API_CIPHER).apply()
     }
 
+    fun saveLocalModelPath(path: String) {
+        preferences.edit().putString(KEY_LOCAL_MODEL_PATH, path).apply()
+    }
+
+    fun loadLocalModelPath(): String? = preferences.getString(KEY_LOCAL_MODEL_PATH, null)
+
+    fun clearLocalModelPath() {
+        preferences.edit().remove(KEY_LOCAL_MODEL_PATH).apply()
+    }
+
     fun loadMessages(): List<ChatMessage> = runCatching {
         val json = appContext.openFileInput(CHAT_FILE).bufferedReader().use { it.readText() }
         val type = object : TypeToken<List<ChatMessage>>() {}.type
@@ -91,5 +101,6 @@ class ChatStorage(context: Context) {
         const val KEY_MODEL = "provider_model"
         const val KEY_API_IV = "provider_api_iv"
         const val KEY_API_CIPHER = "provider_api_cipher"
+        const val KEY_LOCAL_MODEL_PATH = "local_model_path"
     }
 }
