@@ -1,57 +1,107 @@
 # Jarvis Android
 
-**A local-first personal AI assistant for Android.**
+<p align="center">
+  <strong>A private, local-first AI workspace for Android.</strong><br/>
+  Native Kotlin · Jetpack Compose · Provider-neutral architecture
+</p>
 
-Jarvis Android brings the composable ideas behind [OpenJarvis](https://github.com/open-jarvis/OpenJarvis) to native Android: on-device intelligence where practical, optional cloud inference, bounded agents, permission-aware Android tools, user-controlled memory, and measurable execution traces.
+<p align="center">
+  <a href="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml/badge.svg?branch=main"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
+  <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin&logoColor=white">
+  <img alt="Minimum SDK" src="https://img.shields.io/badge/minimum%20SDK-26-64748b">
+  <img alt="License" src="https://img.shields.io/badge/license-pending-lightgrey">
+</p>
 
-> This repository is the Android-native implementation. It is not a direct port of the OpenJarvis Python/server runtime.
+Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-jarvis/OpenJarvis) to a native Android application. The goal is a capable personal AI endpoint with on-device intelligence where practical, optional cloud inference, permission-aware tools, and user-controlled memory.
 
-## Product goals
+> **Project status:** foundation stage. The Android shell and initial security policy are in place. A working inference runtime, persistent chat, and agent execution are not yet implemented. The repository does not claim otherwise.
 
-- **Local-first:** prioritize on-device inference and local persistence; cloud providers are optional.
-- **Provider-neutral:** keep model and inference integrations behind stable interfaces.
-- **Agentic, but controlled:** agents plan and propose actions; a policy layer authorizes tools.
-- **Android-native:** use platform APIs for voice, notifications, files and app integration.
-- **Private by design:** user-controlled memory, explicit permissions, secure secret storage and inspectable traces.
-- **Resource-aware:** account for RAM, storage, battery, thermal state, ABI and network availability.
+## Product principles
 
-## Architecture
-
-The design follows five OpenJarvis-inspired primitives:
-
-| Primitive | Android responsibility |
+| Principle | Engineering commitment |
 |---|---|
-| Intelligence | Model catalog, capabilities and device-aware selection |
-| Engine | Local and cloud inference adapters with streaming/cancellation |
-| Agents | Simple chat and bounded tool-using orchestration |
-| Tools | Typed, permission-gated Android capabilities and policy checks |
-| Memory & Learning | Local conversations, user-controlled memory, traces and evaluation |
+| Local-first | Prefer on-device inference and local persistence; cloud is optional |
+| Provider-neutral | Keep model integrations behind stable contracts |
+| User-controlled | Model output never authorizes an action by itself |
+| Secure by default | Unknown tools are denied; consequential actions require confirmation |
+| Android-native | Respect lifecycle, scoped storage, runtime permissions, and background limits |
+| Resource-aware | Consider RAM, storage, ABI, battery, thermal state, and connectivity |
 
-See [Android Architecture](docs/architecture/ANDROID_ARCHITECTURE.md) for module boundaries, trust model and Android execution constraints.
+## Architecture at a glance
 
-## Roadmap
+```text
+Jetpack Compose UI
+       │
+Presentation / ViewModels
+       │
+Application Orchestrator
+  ┌────┼────────┬──────────┐
+Agents Memory  Tool Hub  Model Router
+  │      │       │           │
+Domain contracts / policy / traces
+  │              │
+Inference ports  Android capability adapters
+  │              │
+Local or cloud   Android platform APIs
+providers
+```
 
-See [the phased roadmap](docs/ROADMAP.md). The project prioritizes a reproducible Android build, domain contracts and safe local chat before adding advanced agents or autonomous device actions.
+The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tools**, and **Memory & Learning**. See [the architecture decision record](docs/architecture/ANDROID_ARCHITECTURE.md) and [the delivery roadmap](docs/ROADMAP.md).
 
-## Security principles
+## Current implementation
 
-- Model output is never treated as authorization.
-- Unknown tools are denied by default.
-- Consequential actions require explicit user approval.
-- No unrestricted shell execution or hidden accessibility automation.
-- No API keys or credentials committed to source control.
-- Memory and traces must be inspectable and user-controllable.
+- [x] Native Android application shell
+- [x] Jetpack Compose foundation UI
+- [x] Deny-by-default tool authorization policy and unit tests
+- [x] Android CI: unit tests and debug APK assembly
+- [x] Debug APK uploaded as a 14-day GitHub Actions artifact
+- [ ] Gradle Wrapper scripts and JAR committed to the repository
+- [ ] Domain contracts and application orchestration
+- [ ] Persistent local conversations
+- [ ] First verified on-device inference adapter
+- [ ] Tool registry, user approvals, and execution traces
 
-## Development status
+A green build validates the current foundation; it is not evidence that unfinished product capabilities are already available.
 
-The repository is establishing its architecture and delivery baseline. Build setup and feature implementation will be added in staged, testable increments. No APK or working on-device inference runtime is claimed until it has been built and verified.
+## Build
 
-## Reference project
+**Requirements:** JDK 17, Android SDK with API 37 platform and Build Tools 37.0.0, and Gradle 9.5.0.
 
-- [OpenJarvis source](https://github.com/open-jarvis/OpenJarvis)
+The CI workflow currently provisions Gradle 9.5.0 directly because the checked-in Gradle Wrapper is not complete yet.
+
+```bash
+gradle testDebugUnitTest
+gradle assembleDebug
+```
+
+The debug APK is generated at:
+
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+For a ready-built APK, open the latest successful [Android CI run](https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml) and download the `jarvis-android-debug-apk` artifact.
+
+## Security model
+
+- Model and retrieved content are untrusted input.
+- Unknown tools and missing capabilities are denied.
+- External side effects and destructive actions require explicit user confirmation.
+- No unrestricted shell execution, hidden accessibility automation, or background recording.
+- Secrets must never be committed to source control.
+- Memory and traces must remain inspectable and user-controllable.
+
+Report security issues privately where possible; see [SECURITY.md](SECURITY.md).
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Keep changes focused, add tests for behavior, and do not mark a roadmap item complete until its acceptance criteria are verified.
+
+## Upstream inspiration
+
+- [OpenJarvis repository](https://github.com/open-jarvis/OpenJarvis)
 - [OpenJarvis architecture overview](https://github.com/open-jarvis/OpenJarvis/blob/main/docs/architecture/overview.md)
 - [OpenJarvis documentation](https://open-jarvis.github.io/OpenJarvis/)
 
-## License
-
-The Android implementation's license will be declared when the source baseline is established. OpenJarvis is separately licensed under Apache-2.0; this repository does not imply ownership of or a change to upstream licensing.
+Jarvis Android is an independent Android-native implementation, not a direct port of the upstream Python/server runtime. Upstream licensing does not automatically determine this repository's license.
