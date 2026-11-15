@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zopair/Jarvis-android-/releases/latest"><img alt="Download for Android" src="https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white"></a>
+  <a href="https://github.com/zopair/Jarvis-android-/releases/download/v0.2.0-test/Jarvis-Android.apk"><img alt="Download for Android" src="https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white"></a>
   <a href="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml/badge.svg?branch=main"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
   <img alt="Language" src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin">
@@ -22,21 +22,23 @@
 
 ## Project
 
+<p align="center"><img src="app/src/main/res/raw/jarvis_core.gif" alt="Original animated Jarvis chrome-core artwork" width="240"></p>
+
 Jarvis brings the composable ideas behind [OpenJarvis](https://github.com/open-jarvis/OpenJarvis) to a native Android application. The goal is a capable personal AI endpoint with on-device intelligence where practical, optional cloud inference, permission-aware tools, and user-controlled memory.
 
 **Project founder and creator:** Aly Hussein Zopair
 
-> **Implementation status:** functional chat MVP in validation. Jarvis supports offline GGUF inference through llama.cpp, persistent local chat history, and an optional OpenAI-compatible HTTPS cloud provider. Cloud API keys are optional and encrypted with Android Keystore. Voice, autonomous agents, and background actions are not implemented yet.
+> **Implementation status:** local-first functional chat MVP in validation. Jarvis supports offline GGUF inference through llama.cpp, persistent local chat history, and an optional OpenAI-compatible HTTPS cloud provider. Cloud API keys are optional and encrypted with Android Keystore. Voice, autonomous agents, and background actions are not implemented yet.
 
 ## Android app
 
 The app interface includes a direct Android release entry point:
 
-- **[Download the latest Android APK](https://github.com/zopair/Jarvis-android-/releases/latest)** — published stable builds will appear here.
+- **[Download Jarvis Android v0.2.0-test](https://github.com/zopair/Jarvis-android-/releases/download/v0.2.0-test/Jarvis-Android.apk)** — direct APK download for device testing.
 - [Browse all releases](https://github.com/zopair/Jarvis-android-/releases)
 - [Latest CI build artifacts](https://github.com/zopair/Jarvis-android-/actions/workflows/android.yml) — temporary build artifacts are available from individual workflow runs.
 
-A release link may show no downloadable APK until the first GitHub Release is published. CI artifacts are temporary and are not a substitute for a versioned release.
+The direct APK link above points to the verified test prerelease. Test builds are not stable production releases.
 
 ## Product principles
 
@@ -81,6 +83,7 @@ The five product primitives are **Intelligence**, **Engine**, **Agents**, **Tool
 - [x] Debug APK uploaded as a 14-day GitHub Actions artifact
 - [ ] First versioned public Android release
 - [ ] Domain contracts and application orchestration
+- [x] Local-first chat routing: local model first, optional cloud only when HTTPS endpoint, model ID and API key are configured
 - [x] Provider-backed chat UI and OpenAI-compatible HTTPS adapter
 - [x] App-private conversation history persistence
 - [x] Android Keystore AES-GCM encrypted provider API key storage
@@ -150,7 +153,7 @@ Changes should be focused, tested, documented, and reviewed. Do not mark roadmap
 - [OpenJarvis architecture overview](https://github.com/open-jarvis/OpenJarvis/blob/main/docs/architecture/overview.md)
 - [OpenJarvis documentation](https://open-jarvis.github.io/OpenJarvis/)
 
-Jarvis Android is an independent Android-native implementation, not a direct port of the upstream Python/server runtime. OpenJarvis licensing does not automatically determine this repository's license.
+Jarvis Android is an independent Android-native adaptation of OpenJarvis concepts, not a port of its Python/server runtime. OpenJarvis is Apache-2.0 licensed; this repository retains its own license and third-party notices. Upstream concepts are mapped to Android-native implementations rather than importing incompatible desktop/server dependencies.
 
 ---
 
