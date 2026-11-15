@@ -58,7 +58,7 @@ private val Panel = Color(0xFF121D30)
 private val Ice = Color(0xFF83D9F7)
 private val Muted = Color(0xFF91A1B8)
 private val UserBubble = Color(0xFF18364B)
-private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/latest/download/Jarvis-Android.apk"
+private const val DIRECT_APK_URL = "https://github.com/zopair/Jarvis-android-/releases/download/v0.1.0-test/Jarvis-Android.apk"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -199,10 +199,12 @@ private fun JarvisChatApp(storage: ChatStorage) {
                         busy = true
                         scope.launch {
                             try {
-                                withContext(Dispatchers.IO) { storage.saveMessages(messages.toList()) }
-                                val answer = provider.complete(config, apiKey, messages.toList())
+                                val requestHistory = messages.toList()
+                                withContext(Dispatchers.IO) { storage.saveMessages(requestHistory) }
+                                val answer = provider.complete(config, apiKey, requestHistory)
                                 messages.add(ChatMessage("assistant", answer))
-                                withContext(Dispatchers.IO) { storage.saveMessages(messages.toList()) }
+                                val completedHistory = messages.toList()
+                                withContext(Dispatchers.IO) { storage.saveMessages(completedHistory) }
                             } catch (failure: Exception) {
                                 error = failure.message ?: "The request failed. Check provider settings and connectivity."
                                 // Do not leave a failed user turn looking like a completed exchange.
